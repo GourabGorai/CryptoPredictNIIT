@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cryptocurrency Price Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body>
+    <div class="container">
+        <h1>Cryptocurrency Price Prediction</h1>
+
+        <form id="fetch-form">
+            <h2>Fetch Data</h2>
+            <label for="symbol">Symbol:</label>
+            <input type="text" id="symbol" name="symbol" required>
+            <label for="start_date">Start Date:</label>
+            <input type="date" id="start_date" name="start_date" required>
+            <label for="end_date">End Date:</label>
+            <input type="date" id="end_date" name="end_date" required>
+            <button type="submit">Fetch Data</button>
+        </form>
+
+        <form id="train-form">
+            <h2>Train Model</h2>
+            <label for="train-symbol">Symbol:</label>
+            <input type="text" id="train-symbol" name="symbol" required>
+            <button type="submit">Train Model</button>
+        </form>
+
+        <div id="results"></div>
+
+        <form id="predict-form">
+            <h2>Predict Future Price</h2>
+            <label for="predict-symbol">Symbol:</label>
+            <input type="text" id="predict-symbol" name="symbol" required>
+            <label for="user_date">Future Date:</label>
+            <input type="date" id="user_date" name="user_date" required>
+            <button type="submit">Predict Price</button>
+        </form>
+
+        <div id="prediction"></div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $('#fetch-form').on('submit', function(event) {
+                event.preventDefault();
+                $.post('/fetch_data', $(this).serialize(), function(response) {
+                    alert(response.message);
+                }).fail(function(error) {
+                    alert(error.responseJSON.error);
+                });
+            });
+
+            $('#train-form').on('submit', function(event) {
+                event.preventDefault();
+                $.post('/train_model', $(this).serialize(), function(response) {
+                    $('#results').html(
+                        `<h3>Training Results</h3>
+                        <p>Cross-validation scores: ${response.cv_scores}</p>
+                        <p>Mean CV score: ${response.mean_cv_score}</p>
+                        <p>R^2 score for test data: ${response.r2_test}</p>
+                        <p>R^2 score for 2024 data: ${response.r2_2024}</p>
+                        <img src="data:image/png;base64,${response.plot_url}" alt="Prediction Plot">`
+                    );
+                }).fail(function(error) {
+                    alert(error.responseJSON.error);
+                });
+            });
+
+            $('#predict-form').on('submit', function(event) {
+                event.preventDefault();
+                $.post('/predict_price', $(this).serialize(), function(response) {
+                    $('#prediction').html(
+                        `<h3>Prediction</h3>
+                        <p>Predicted price for ${$('#user_date').val()}: $${response.predicted_price.toFixed(2)}</p>`
+                    );
+                }).fail(function(error) {
+                    alert(error.responseJSON.error);
+                });
+            });
+        });
+    </script>
+</body>
+</html>
